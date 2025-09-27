@@ -1,3 +1,6 @@
+pub mod server;
+pub mod client;
+
 use std::{
     fs,
     io::{BufReader, prelude::*},
@@ -6,14 +9,17 @@ use std::{
     time::Duration,
 };
 
-use postgres::{Client, NoTls};
+use dotenvy;
+
+use crate::server::db::db_connect::get_database_client;
 
 pub mod threadpool;
 
 use crate::threadpool::ThreadPool;
 
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
+    let api_address = dotenvy::var("ADDRESS").unwrap_or(String::from("127.0.0.1:7878"));
+    let listener = TcpListener::bind(api_address).unwrap();
     let pool = ThreadPool::new(4);
 
     for stream in listener.incoming() {
@@ -26,7 +32,7 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let mut buf_reader = BufReader::new(&mut stream);
+    let buf_reader = BufReader::new(&mut stream);
     let http_request: Vec<_> = buf_reader
         .lines()
         .map(|result| result.unwrap())
@@ -43,8 +49,7 @@ let (status_line, content) = match request_line.as_str() {
     "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "hello.html".to_owned()),
     "GET /songs HTTP/1.1" => {
         // Code to get all songs
-        let mut client = Client::connect("host=localhost dbname=SEGURIDAD user=api password=F2wYzVzee6RNmpsBWqbxLWAMvywqyYfDsZawAwnfYhvEjoJL3YWCBTDPeyrLiygv4YXBnpM7KeJjaGyVHvyzAKWxfPK9uYueBayc", NoTls)
-            .expect("Failed to connect to database");
+        let mut client = get_database_client().unwrap();
         let mut result: String = String::new();
         for row in client.query("SELECT title, artist FROM songs", &[]).expect("Failed to select songs") {
             let name: &str = row.get(0);
@@ -59,8 +64,7 @@ let (status_line, content) = match request_line.as_str() {
 
         let uuid_str = path.trim_start_matches("/songs/").trim_end_matches(" HTTP/1.1");
         
-        let mut client = Client::connect("host=localhost dbname=SEGURIDAD user=api password=F2wYzVzee6RNmpsBWqbxLWAMvywqyYfDsZawAwnfYhvEjoJL3YWCBTDPeyrLiygv4YXBnpM7KeJjaGyVHvyzAKWxfPK9uYueBayc", NoTls)
-            .expect("Failed to connect to database");
+        let mut client = get_database_client().unwrap();
 
         if let Ok(row) = client.query_one("SELECT title, artist FROM songs WHERE id = $1::uuid", &[&uuid_str]) {
             let title: &str = row.get(0);
