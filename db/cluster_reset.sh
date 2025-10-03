@@ -1,13 +1,13 @@
 #!/bin/bash
 
-set -ex
+set -e
 
 DB_NAME="SEGURIDAD"
 PG_USER="api"
 PG_PORT="5432"
 CLUSTER_NAME="main"
-SQL_DIR=$(pwd) # Captura el directorio actual
-TEMP_DIR="/tmp/pg_setup_$$" # Directorio temporal único
+SQL_DIR=$(pwd)
+TEMP_DIR="/tmp/pg_setup_$$"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║                      WARNING!                                ║"
@@ -88,13 +88,13 @@ cp "$SQL_DIR"/up.sql "$TEMP_DIR"/
 sudo chown -R postgres:postgres "$TEMP_DIR"
 
 echo "Recreating user and database..."
-# Comando 1: Eliminar el rol
+
 sudo -u postgres psql -c "DROP ROLE IF EXISTS \"$PG_USER\";"
-# Comando 2: Crear el rol
-sudo -u postgres psql -c "CREATE ROLE \"$PG_USER\" WITH PASSWORD '$PGPASSWORD' SUPERUSER LOGIN;"
-# Comando 3: Eliminar la base de datos
+
+sudo -u postgres psql -c "CREATE ROLE \"$PG_USER\" WITH PASSWORD '$PGPASSWORD' LOGIN;"
+
 sudo -u postgres psql -c "DROP DATABASE IF EXISTS \"$DB_NAME\";"
-# Comando 4: Crear la base de datos
+
 sudo -u postgres psql -c "CREATE DATABASE \"$DB_NAME\" OWNER \"$PG_USER\";"
 
 

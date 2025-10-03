@@ -1,6 +1,96 @@
-CREATE TABLE SONGS(
+CREATE TABLE ROLE(
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username TEXT,
-    password TEXT
+    name TEXT NOT NULL UNIQUE
 );
 
+CREATE TABLE APP_USER(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role UUID NOT NULL REFERENCES ROLE (id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE TAG(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE WRITING_TYPE(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE WRITING(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    id_type UUID NOT NULL REFERENCES WRITING_TYPE(id),
+    id_user UUID NOT NULL REFERENCES APP_USER(id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE COMMENT(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id_user UUID NOT NULL REFERENCES APP_USER(id),
+    id_writing UUID NOT NULL REFERENCES WRITING(id),
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE WRITINGXTAG(
+    id_tag UUID NOT NULL,
+    id_writing UUID NOT NULL,
+    PRIMARY KEY (id_tag, id_writing)
+);
+
+INSERT INTO ROLE(name) VALUES
+('superadmin'),('admin'),('APP_USER');
+
+INSERT INTO WRITING_TYPE(name) VALUES
+('tale'),('novel'),('poem');
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = NOW();
+   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER updated_at_timestamp_APP_USER
+BEFORE UPDATE ON APP_USER
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER updated_at_timestamp_writing
+BEFORE UPDATE ON WRITING
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE TRIGGER updated_at_timestamp_comment
+BEFORE UPDATE ON COMMENT
+FOR EACH ROW
+EXECUTE PROCEDURE update_updated_at_column();
+
+CREATE SCHEMA schema_seguridad;
+ALTER TABLE ROLE SET SCHEMA schema_seguridad;
+ALTER TABLE APP_USER SET SCHEMA schema_seguridad;
+ALTER TABLE TAG SET SCHEMA schema_seguridad;
+ALTER TABLE WRITING_TYPE SET SCHEMA schema_seguridad;
+ALTER TABLE WRITING SET SCHEMA schema_seguridad;
+ALTER TABLE COMMENT SET SCHEMA schema_seguridad;
+ALTER TABLE WRITINGXTAG SET SCHEMA schema_seguridad;
+
+GRANT USAGE ON SCHEMA schema_seguridad TO api;
+GRANT SELECT ON ALL TABLES IN SCHEMA schema_seguridad TO api;
+
+GRANT INSERT, UPDATE, DELETE ON schema_seguridad.WRITING TO api;
+GRANT INSERT, DELETE ON schema_seguridad.TAG TO api;
+GRANT INSERT, DELETE ON schema_seguridad.WRITING_TYPE TO api;
+GRANT INSERT, UPDATE, DELETE ON schema_seguridad.APP_USER TO api;
+GRANT INSERT, UPDATE, DELETE ON schema_seguridad.COMMENT TO api;
+GRANT INSERT, DELETE ON schema_seguridad.WRITINGXTAG TO api;

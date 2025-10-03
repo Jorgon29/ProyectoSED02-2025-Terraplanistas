@@ -7,18 +7,17 @@ use std::{
     net::{TcpListener, TcpStream},
     thread,
     time::Duration,
+    env
 };
 
-use dotenvy;
-
-use crate::server::db::db_connect::get_database_client;
-
+pub mod routing_helpers;
 pub mod threadpool;
 
 use crate::threadpool::ThreadPool;
+use crate::server::controllers;
 
 fn main() {
-    let api_address = dotenvy::var("ADDRESS").unwrap_or(String::from("127.0.0.1:7878"));
+    let api_address = env::var("ADDRESS").unwrap_or(String::from("127.0.0.1:7878"));
     let listener = TcpListener::bind(api_address).unwrap();
     let pool = ThreadPool::new(4);
 
@@ -32,55 +31,71 @@ fn main() {
 }
 
 fn handle_connection(mut stream: TcpStream) {
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
+    let mut buf_reader = BufReader::new(&mut stream);
+    
+    let mut headers = Vec::new();
+    let mut content_length: usize = 0;
+    let mut request_line_option: Option<String> = None;
 
-    if http_request.is_empty() {
-        return;
-    }
+    for line_result in (&mut buf_reader).lines() {
+        let line = match line_result {
+            Ok(l) => l,
+            Err(_) => return,
+        };
 
-    let request_line = &http_request[0];
-
-let (status_line, content) = match request_line.as_str() {
-    "GET / HTTP/1.1" => ("HTTP/1.1 200 OK", "hello.html".to_owned()),
-    "GET /songs HTTP/1.1" => {
-        // Code to get all songs
-        let mut client = get_database_client().unwrap();
-        let mut result: String = String::new();
-        for row in client.query("SELECT title, artist FROM songs", &[]).expect("Failed to select songs") {
-            let name: &str = row.get(0);
-            let artist: &str = row.get(1);
-            result.push_str(&format!("{} - {}\n", name, artist));
+        if line.is_empty() {
+            break;
         }
-        ("HTTP/1.1 200 OK", result)
+
+        if request_line_option.is_none() {
+            request_line_option = Some(line.clone());
+        }
+
+        if line.to_lowercase().starts_with("content-length:") {
+            if let Some((_, len_str)) = line.split_once(':') {
+                if let Ok(length) = len_str.trim().parse::<usize>() {
+                    content_length = length;
+                }
+            }
+        }
+        headers.push(line);
     }
-    _ if request_line.starts_with("GET /songs/") => {
-        let parts: Vec<&str> = request_line.split(' ').collect();
-        let path = parts[1];
-
-        let uuid_str = path.trim_start_matches("/songs/").trim_end_matches(" HTTP/1.1");
-        
-        let mut client = get_database_client().unwrap();
-
-        if let Ok(row) = client.query_one("SELECT title, artist FROM songs WHERE id = $1::uuid", &[&uuid_str]) {
-            let title: &str = row.get(0);
-            let artist: &str = row.get(1);
-            let result = format!("{} - {}", title, artist);
-            ("HTTP/1.1 200 OK", result)
-        } else {
-            ("HTTP/1.1 404 NOT FOUND", "Song not found or invalid UUID format.".to_owned())
+    
+    let request_line = match request_line_option {
+        Some(line) => line,
+        None => return,
+    };
+    
+    let mut body_content = String::new();
+    if content_length > 0 {
+        let mut buffer = vec![0; content_length];
+        match buf_reader.read_exact(&mut buffer) {
+            Ok(_) => {
+                if let Ok(s) = String::from_utf8(buffer) {
+                    body_content = s;
+                }
+            },
+            Err(_) => return,
         }
     }
-    _ => ("HTTP/1.1 404 NOT FOUND", "404.html".to_owned()),
-};
 
-    let length = content.len();
+    // Ruteo
+    let (mut status_line, mut response_body) = ("HTTP/1.1 404 NOT FOUND".to_owned(), "404 Not Found".to_owned());
+    
+    if let Some((method, path)) = routing_helpers::parse_request_line(&request_line) {
+        let path_segments: Vec<&str> = path.trim_matches('/').split('/').collect();
+        let resource = path_segments[0];
+
+        (status_line, response_body) = match resource {
+            "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content),
+            "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content),
+            _ => (status_line, response_body),
+        };
+    }
+    
+    let length = response_body.len();
 
     let response =
-        format!("{status_line}\r\nContent-Length: {length}\r\nConnection: close\r\n\r\n{content}");
+        format!("{status_line}\r\nContent-Length: {length}\r\nConnection: close\r\n\r\n{response_body}");
     stream.write_all(response.as_bytes()).unwrap();
 }
