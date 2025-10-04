@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
 postgres = "0.19.10"
+regex = "1.11.3"
 uuid = "1.18.1"

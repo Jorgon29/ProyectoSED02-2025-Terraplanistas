@@ -5,7 +5,7 @@ pub fn get_roles() -> String {
         let mut result: String = String::new();
         for row in client.query("SELECT * FROM schema_seguridad.ROLE", &[]).expect("Failed to select role") {
             let name: &str = row.get(1);
-            result.push_str(&format!("{} \n", name));
+            result.push_str(&format!("{}\n", name));
         }
         result
 }
