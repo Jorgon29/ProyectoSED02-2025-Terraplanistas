@@ -54,6 +54,19 @@ pub fn handle_users_request(method: &str, path_segments: &[&str], body: &str) ->
             }
             Answer::new(400, "Bad request for creating user".to_owned())
         }
+        "DELETE" => {
+            if path_segments.len() == 2 {
+                let id = path_segments[1];
+                let result = services_user::delete_user(id.to_owned());
+                let answer = match result {
+                    Ok(_) => Answer::new(200, "User deleted".to_owned()),
+                    Err(e) => Answer::new(500, format!("Failed to delete user: {}", e))
+                };
+                answer
+            } else {
+                Answer::new(400, "An ID is needed for deletion of user".to_owned())
+            }
+        }
         _ => {
             Answer::new(405, "Method not supported for /users.".to_owned())
         }

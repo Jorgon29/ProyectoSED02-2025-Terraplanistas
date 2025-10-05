@@ -1,4 +1,6 @@
 use postgres::{Client, Error};
+use uuid::Uuid;
+use crate::server::errors::user_errors;
 
 use crate::server::db::db_connect::get_database_client;
 use crate::server::models::models_user::User;
@@ -15,5 +17,12 @@ pub fn get_all_users() -> Result<Vec<User>, Error> {
     for line in query {
         result.push(User{id: line.get(0), username: line.get(1)});
     };
+    Ok(result)
+}
+
+pub fn delete_user(id: String) -> Result<u64, user_errors::user_deletion_error::UserDeletionError>{
+    let id: Uuid = Uuid::parse_str(&id).map_err(user_errors::user_deletion_error::UserDeletionError::Id)?;
+    let mut client: Client = get_database_client()?;
+    let result = client.execute("DELETE FROM schema_seguridad.APP_USER WHERE id = $1", &[&id])?;
     Ok(result)
 }

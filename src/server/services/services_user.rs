@@ -9,6 +9,7 @@ use regex::Regex;
 use crate::server::models::models_user::User;
 use crate::server::repositories::repositories_user;
 use crate::server::errors::user_errors::user_creation_error::UserCreationError;
+use crate::server::errors::user_errors::user_deletion_error::UserDeletionError;
 
 pub fn create_user(username: &str, password: &str, email: &str) -> Result<u64, UserCreationError> {
 
@@ -119,4 +120,8 @@ pub fn create_user(username: &str, password: &str, email: &str) -> Result<u64, U
 
 pub fn get_every_user() -> Result<Vec<User>, postgres::Error>{
     repositories_user::get_all_users()
+}
+
+pub fn delete_user(id: String)-> Result<u64, UserDeletionError>{
+    repositories_user::delete_user(id)
 }
