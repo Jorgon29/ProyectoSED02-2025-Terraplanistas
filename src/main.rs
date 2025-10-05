@@ -13,7 +13,7 @@ use std::{
 pub mod routing_helpers;
 pub mod threadpool;
 
-use crate::threadpool::ThreadPool;
+use crate::{server::controllers::answer::Answer, threadpool::ThreadPool};
 use crate::server::controllers;
 
 fn main() {
@@ -79,23 +79,20 @@ fn handle_connection(mut stream: TcpStream) {
         }
     }
 
-    // Ruteo
-    let (mut status_line, mut response_body) = ("HTTP/1.1 404 NOT FOUND".to_owned(), "404 Not Found".to_owned());
+    let mut answer = Answer::new(500, "".to_string());
     
     if let Some((method, path)) = routing_helpers::parse_request_line(&request_line) {
         let path_segments: Vec<&str> = path.trim_matches('/').split('/').collect();
         let resource = path_segments[0];
 
-        (status_line, response_body) = match resource {
+        answer = match resource {
             "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content),
             "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content),
-            _ => (status_line, response_body),
+            _ => Answer::new(404, "Not found".to_string()),
         };
     }
-    
-    let length = response_body.len();
 
     let response =
-        format!("{status_line}\r\nContent-Length: {length}\r\nConnection: close\r\n\r\n{response_body}");
+        format!("{}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}", answer.get_status_line(), answer.get_body_size(), answer.response_body);
     stream.write_all(response.as_bytes()).unwrap();
 }

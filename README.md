@@ -7,3 +7,4 @@
 + [Argon2](https://docs.rs/argon2/latest/argon2/)
 + [UUID](https://docs.rs/uuid/latest/uuid/)
 + [Regex](https://docs.rs/regex/latest/regex/)
++ [Postgres-types](https://docs.rs/postgres-types/latest/postgres_types/)

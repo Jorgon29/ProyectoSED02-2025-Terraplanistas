@@ -1,26 +1,39 @@
-use crate::server::services::services_user;
+use crate::server::{controllers::answer::Answer, services::services_user};
 
-pub fn handle_users_request(method: &str, path_segments: &[&str], body: &str) -> (String, String) {
+pub fn handle_users_request(method: &str, path_segments: &[&str], body: &str) -> Answer {
     match method {
         "GET" => {
             if path_segments.len() == 1 {
-                // Todos los usuarios
-                ("HTTP/1.1 200 OK".to_owned(), "Fetched all users (Controller)".to_owned())
+                let selection = services_user::get_every_user();
+                let answer = match selection {
+                    Ok(users) => {
+                        let mut data = String::new();
+                        for user in users {
+                            data.push_str(&user.id.to_string());
+                            data.push(',');
+                            data.push_str(&user.username);
+                            data.push_str("\n");
+                        }
+                        Answer::new(200, data)
+                    },
+                    Err(e) => Answer::new(500, format!("Failed while attemting to create user: {}", e))
+                };
+                return answer;
             } else if path_segments.len() == 2 {
                 // Uno específico
                 let id = path_segments[1];
-                ("HTTP/1.1 200 OK".to_owned(), format!("Fetched user with ID: {}", id))
+                Answer::new(200, format!("Fetched user with ID: {}", id))
             } else {
-                ("HTTP/1.1 400 Bad Request".to_owned(), "Invalid users URL format.".to_owned())
+                Answer::new(400, "Invalid users URL format.".to_owned())
             }
         }
         "PUT" => {
             if path_segments.len() == 2 {
                 // actualizar?
                 let id = path_segments[1];
-                ("HTTP/1.1 200 OK".to_owned(), format!("Updated user with ID: {}", id))
+                Answer::new(200, format!("Updated user with ID: {}", id))
             } else {
-                ("HTTP/1.1 400 Bad Request".to_owned(), "Update requires a user ID.".to_owned())
+                Answer::new(400, "Update requires a user ID.".to_owned())
             }
         }
         "POST" => {
@@ -32,17 +45,30 @@ pub fn handle_users_request(method: &str, path_segments: &[&str], body: &str) ->
                     let password = parts_data[1];
                     let email = parts_data[2];
                     let insert_query = services_user::create_user(username, password, email);
-                    let answer: (String, String) = match insert_query {
-                        Ok(_) => ("HTTP/1.1 201 OK".to_owned(), "User created".to_owned()),
-                        _error => ("HTTP/1.1 500 Internal server error".to_owned(), "Failed to connect to database on user creation".to_owned())
+                    let answer: Answer = match insert_query {
+                        Ok(_) => Answer::new(201, "User created".to_owned()),
+                        Err(e) => Answer::new(500, format!("Failed while attemting to create user: {}", e))
                     };
                     return answer;
                 }
             }
-            ("HTTP/1.1 400 Bad Request".to_owned(), "Bad request for creating user".to_owned())
+            Answer::new(400, "Bad request for creating user".to_owned())
+        }
+        "DELETE" => {
+            if path_segments.len() == 2 {
+                let id = path_segments[1];
+                let result = services_user::delete_user(id.to_owned());
+                let answer = match result {
+                    Ok(_) => Answer::new(200, "User deleted".to_owned()),
+                    Err(e) => Answer::new(500, format!("Failed to delete user: {}", e))
+                };
+                answer
+            } else {
+                Answer::new(400, "An ID is needed for deletion of user".to_owned())
+            }
         }
         _ => {
-            ("HTTP/1.1 405 Method Not Allowed".to_owned(), "Method not supported for /users.".to_owned())
+            Answer::new(405, "Method not supported for /users.".to_owned())
         }
     }
 }
