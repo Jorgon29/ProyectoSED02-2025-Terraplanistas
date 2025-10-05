@@ -3,8 +3,10 @@
 [Rust sin frameworks](https://doc.rust-lang.org/stable/)
 
 ### Dependencias
-+ [Postgres](https://docs.rs/postgres/latest/postgres/)
-+ [Argon2](https://docs.rs/argon2/latest/argon2/)
-+ [UUID](https://docs.rs/uuid/latest/uuid/)
-+ [Regex](https://docs.rs/regex/latest/regex/)
-+ [Postgres-types](https://docs.rs/postgres-types/latest/postgres_types/)
++ Para la base de datos
+  + [Postgres](https://docs.rs/postgres/latest/postgres/)
+  + [Postgres-types](https://docs.rs/postgres-types/latest/postgres_types/)
+  + [UUID](https://docs.rs/uuid/latest/uuid/)
++ Otras
+  + [Argon2](https://docs.rs/argon2/latest/argon2/)
+  + [Regex](https://docs.rs/regex/latest/regex/)
