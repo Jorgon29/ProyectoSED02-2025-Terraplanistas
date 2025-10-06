@@ -7,3 +7,8 @@ pub fn parse_request_line(line: &str) -> Option<(&str, &str)> {
         None
     }
 }
+
+fn simulate_multipart_parse(raw_bytes: Vec<u8>) -> Result<(String, Vec<u8>, String), String> {
+    let image_data = &raw_bytes;
+    Ok(("".to_string(), raw_bytes, "png".to_string()))
+}

@@ -8,4 +8,4 @@ argon2 = { version = "0.5.3", features = ["std"] }
 postgres = "0.19.10"
 postgres-types = { version = "0.2.10", features = ["derive", "with-uuid-1"] }
 regex = "1.11.3"
-uuid = "1.18.1"
+uuid = { version = "1.18.1", features = ["v4"] }

@@ -28,3 +28,5 @@ o simulación de producción
 ```bash
 ./run.sh p
 ```
+
+Con respecto a la creación de writings, es necesario. 

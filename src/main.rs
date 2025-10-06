@@ -34,6 +34,7 @@ fn handle_connection(mut stream: TcpStream) {
     let mut buf_reader = BufReader::new(&mut stream);
     
     let mut headers = Vec::new();
+    let mut content_type: Option<String> = None;
     let mut content_length: usize = 0;
     let mut request_line_option: Option<String> = None;
 
@@ -51,11 +52,17 @@ fn handle_connection(mut stream: TcpStream) {
             request_line_option = Some(line.clone());
         }
 
-        if line.to_lowercase().starts_with("content-length:") {
+        let line_lower = line.to_lowercase();
+
+        if line_lower.starts_with("content-length:") {
             if let Some((_, len_str)) = line.split_once(':') {
                 if let Ok(length) = len_str.trim().parse::<usize>() {
                     content_length = length;
                 }
+            }
+        } else if line_lower.starts_with("content-type:") {
+            if let Some((_, type_str)) = line.split_once(':') {
+                content_type = Some(type_str.trim().to_owned());
             }
         }
         headers.push(line);
@@ -66,16 +73,25 @@ fn handle_connection(mut stream: TcpStream) {
         None => return,
     };
     
-    let mut body_content = String::new();
+    let mut body_content_string = String::new();
+    let mut body_content_bytes: Vec<u8> = Vec::new();
+
     if content_length > 0 {
         let mut buffer = vec![0; content_length];
-        match buf_reader.read_exact(&mut buffer) {
-            Ok(_) => {
-                if let Ok(s) = String::from_utf8(buffer) {
-                    body_content = s;
-                }
-            },
-            Err(_) => return,
+        if buf_reader.read_exact(&mut buffer).is_ok() {
+            let is_binary_payload = content_type.as_deref().map(|s| {
+                s.starts_with("multipart/form-data") || s.starts_with("application/octet-stream")
+            }).unwrap_or(false);
+        
+            if is_binary_payload {
+                body_content_bytes = buffer;
+            } else if let Ok(s) = String::from_utf8(buffer) {
+                body_content_string = s;
+            } else {
+                return; 
+            }
+        } else {
+            return;
         }
     }
 
@@ -85,9 +101,15 @@ fn handle_connection(mut stream: TcpStream) {
         let path_segments: Vec<&str> = path.trim_matches('/').split('/').collect();
         let resource = path_segments[0];
 
+        let image_extension = String::from("png");
         answer = match resource {
-            "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content),
-            "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content),
+            "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content_string),
+            "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content_string),
+            "writings" => controllers::controllers__writing::handle_writing_request(method, 
+                    &path_segments, 
+                    &body_content_string,
+                    Some(body_content_bytes),
+                    &image_extension),
             _ => Answer::new(404, "Not found".to_string()),
         };
     }
