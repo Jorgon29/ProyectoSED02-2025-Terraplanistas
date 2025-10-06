@@ -29,4 +29,4 @@ o simulación de producción
 ./run.sh p
 ```
 
-Con respecto a la creación de writings, es necesario. 
+Con respecto a la creación de writings, es necesario haber creado con anticipación los directorios donde se almacenarán las imágenes. 
