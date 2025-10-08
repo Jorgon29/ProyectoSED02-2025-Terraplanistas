@@ -1,7 +1,6 @@
 use uuid::Uuid;
 pub struct Comment{
-    id: Uuid,
-    author: Uuid,
-    writing: Uuid,
-    content: String
+    pub id: Uuid,
+    pub author: String,
+    pub content: String
 }

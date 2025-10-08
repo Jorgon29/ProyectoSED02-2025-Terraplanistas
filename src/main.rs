@@ -105,11 +105,17 @@ fn handle_connection(mut stream: TcpStream) {
         answer = match resource {
             "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content_string),
             "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content_string),
-            "writings" => controllers::controllers__writing::handle_writing_request(method, 
+            "writings" => {
+                    match method {
+                        "POST" => controllers::controllers_writing::handle_writing_request(method, 
                     &path_segments, 
                     &body_content_string,
                     Some(body_content_bytes),
                     &image_extension),
+                        _ => controllers::controllers_writing::handle_non_post_writings_request(method, &path_segments, &body_content_string)
+                    }
+                    
+                },
             _ => Answer::new(404, "Not found".to_string()),
         };
     }

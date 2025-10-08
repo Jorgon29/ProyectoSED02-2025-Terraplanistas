@@ -1,7 +1,8 @@
+use postgres::Error;
 use uuid::Uuid;
 use std::{env, fs};
 
-use crate::server::{errors::writing_errors::writing_creation_error::WritingCreationError, repositories::repositories_writing::create_writing};
+use crate::server::{errors::writing_errors::{writing_creation_error::WritingCreationError, writing_fetching_error::WritingFetchingError}, models::models_writing::WritingFull, repositories::repositories_writing::{create_writing, get_one_writing}};
 
 pub fn save_writing(author: Uuid, title: String, content: String, tags: Vec<Uuid>, cover: Vec<u8>, writing_type: Uuid, image_extension: String) -> Result<u64, WritingCreationError> {
     let image_filename = Uuid::new_v4().to_string();
@@ -27,4 +28,9 @@ pub fn save_writing(author: Uuid, title: String, content: String, tags: Vec<Uuid
         }
     };
     final_check
+}
+
+pub fn get_singular_writing(id: String) -> Result<WritingFull, WritingFetchingError>{
+    let uuid_id: Uuid = Uuid::parse_str(&id)?;
+    get_one_writing(uuid_id).map_err(WritingFetchingError::Db)
 }
