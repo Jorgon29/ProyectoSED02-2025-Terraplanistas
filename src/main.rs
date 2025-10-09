@@ -106,7 +106,7 @@ fn handle_connection(mut stream: TcpStream) {
 
         answer = match *resource {
             "" | "index" => controllers::pages_controller::serve_html_file("src/client/views/index.html"),
-            "assets" => controllers::pages_controller::serve_static_file(&path_segments),
+            "assets" => controllers::static_files_controller::serve_static_file(&path_segments),
             "roles" => controllers::controllers_role::handle_roles_request(method, &path_segments, &body_content_string),
             "users" => controllers::controllers_user::handle_users_request(method, &path_segments, &body_content_string),
             "writings" => {
