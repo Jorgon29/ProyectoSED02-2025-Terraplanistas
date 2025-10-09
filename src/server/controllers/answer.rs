@@ -1,6 +1,35 @@
+pub enum ContentType {
+    TextPlain,
+    ApplicationJson,
+    TextHtml,
+    ImagePng,
+    ImageJpeg,
+    ImageSvg,
+    ApplicationOctetStream,
+    ApplicationJavascript,
+    TextCss
+}
+
+impl ContentType {
+    pub fn to_mime_type_str(&self) -> &'static str {
+        match self {
+            ContentType::TextPlain => "text/plain",
+            ContentType::ApplicationJson => "application/json",
+            ContentType::TextHtml => "text/html",
+            ContentType::ImagePng => "image/png",
+            ContentType::ImageJpeg => "image/jpeg",
+            ContentType::ImageSvg => "image/svg+xml",
+            ContentType::ApplicationOctetStream => "application/octet-stream",
+            ContentType::ApplicationJavascript => "text/javascript",
+            ContentType::TextCss => "text/css",
+        }
+    }
+}
+
 pub struct Answer {
     pub status_code: u16,
-    pub response_body: String,
+    pub response_body: Vec<u8>, 
+    pub content_type: String, 
 }
 
 impl Answer {
@@ -16,9 +45,18 @@ impl Answer {
         }
     }
 
-    pub fn new(status_code: u16, response_body: String) -> Self {
+    pub fn new(status_code: u16, response_body: String, content_type: ContentType) -> Self {
         Answer {
             status_code,
+            content_type: content_type.to_mime_type_str().to_string(), 
+            response_body: response_body.into_bytes(), 
+        }
+    }
+    
+    pub fn new_binary(status_code: u16, response_body: Vec<u8>,content_type: ContentType) -> Self {
+        Answer {
+            status_code,
+            content_type: content_type.to_mime_type_str().to_string(),
             response_body,
         }
     }

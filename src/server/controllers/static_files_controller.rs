@@ -1,4 +1,4 @@
-use crate::server::controllers::answer::Answer;
+use crate::server::controllers::answer::{Answer, ContentType};
 use std::fs;
 use std::path::Path;
 
@@ -6,41 +6,35 @@ use std::path::Path;
 
 pub fn serve_static_file(path_segments: &[&str]) -> Answer {
     if path_segments.len() < 2 {
-        return Answer::new(404, "Archivo no especificado".to_string());
+        return Answer::new(404, "File not specified".to_string(), ContentType::TextHtml);
     }
     
-    let full_path = path_segments[1..].join("/");
+    let full_path = path_segments[2..].join("/");
     let clean_path = full_path.split('?').next().unwrap_or(&full_path);
     let file_path = format!("src/client/assets/{}", clean_path);
     
-    println!("📁 Sirviendo archivo estático: {}", file_path);
-    
     match fs::read(&file_path) {
         Ok(content) => {
-            let is_text_file = file_path.ends_with(".html") || 
-                              file_path.ends_with(".css") || 
-                              file_path.ends_with(".js") ||
-                              file_path.ends_with(".jpeg") ||
-                              file_path.ends_with(".json");
-            
-            if is_text_file {
-                match String::from_utf8(content) {
-                    Ok(text_content) => {
-                        println!("✓ Archivo servido: {}", Path::new(&file_path).file_name().unwrap().to_string_lossy());
-                        Answer::new(200, text_content)
-                    }
-                    Err(_) => Answer::new(500, "Error procesando archivo".to_string()),
-                }
-            } else {
-                // Archivos binarios (imágenes, fuentes)
-                let body = String::from_utf8_lossy(&content).to_string();
-                println!("✓ Archivo binario servido: {}", Path::new(&file_path).file_name().unwrap().to_string_lossy());
-                Answer::new(200, body)
-            }
+            let path = Path::new(clean_path);
+            let content_type = get_content_type_from_path(&path);
+            Answer::new_binary(200, content, content_type)
         }
         Err(e) => {
-            println!("❌ Error al leer archivo estático {}: {}", file_path, e);
-            Answer::new(404, format!("Archivo no encontrado: {}", clean_path))
+            Answer::new(404, format!("Archivo no encontrado: {}", e), ContentType::TextHtml)
         }
+    }
+}
+
+pub fn get_content_type_from_path(path: &Path) -> ContentType {
+    match path.extension().and_then(|ext| ext.to_str()) {
+        
+        Some("png") => ContentType::ImagePng,
+        Some("jpg") | Some("jpeg") => ContentType::ImageJpeg,
+        Some("svg") => ContentType::ImageSvg,
+        
+        Some("html") | Some("htm") => ContentType::TextHtml,
+        Some("css") => ContentType::TextCss,
+        Some("js") => ContentType::ApplicationJavascript,
+        _ => ContentType::ApplicationOctetStream,
     }
 }
