@@ -1,4 +1,4 @@
-pub struct Answer{
+pub struct Answer {
     pub status_code: u16,
     pub response_body: String,
 }

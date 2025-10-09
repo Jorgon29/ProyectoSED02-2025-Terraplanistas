@@ -87,6 +87,8 @@ ALTER TABLE WRITING SET SCHEMA schema_seguridad;
 ALTER TABLE COMMENT SET SCHEMA schema_seguridad;
 ALTER TABLE WRITINGXTAG SET SCHEMA schema_seguridad;
 
+
+
 GRANT USAGE ON SCHEMA schema_seguridad TO api;
 GRANT SELECT ON ALL TABLES IN SCHEMA schema_seguridad TO api;
 
