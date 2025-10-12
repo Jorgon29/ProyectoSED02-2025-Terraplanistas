@@ -1,0 +1,49 @@
+.multi-select {
+    position: relative;
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    padding: 0.4rem;
+    background-color: #fff;
+    cursor: text;
+}
+
+.selected-tags .badge {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.6rem;
+}
+
+.dropdown-list {
+    position: absolute;
+    width: 100%;
+    max-height: 180px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    z-index: 1000;
+    display: none;
+}
+
+.dropdown-list .item {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+}
+
+.dropdown-list .item:hover {
+    background-color: #f1f1f1;
+}
+
+.tag-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html data-bs-theme="light" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>StoryLoom</title>
+    <link rel="stylesheet" href="../assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../assets/css/Kaushan_Script.css">
+    <link rel="stylesheet" href="../assets/css/Montserrat.css">
+    <link rel="stylesheet" href="../assets/fonts/font-awesome.min.css">
+    <link rel="stylesheet" href="../assets/css/multipleSelect.css">
+</head>
+
+<body id="page-top" data-bs-spy="scroll" data-bs-target="#mainNav" data-bs-offset="54">
+    <section id="contact" style="background-image:url('../assets/img/team/map-image.png');">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2 class="text-uppercase section-heading">Writing your story !</h2>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-12">
+                    <form id="contactForm" name="contactForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3 form-group"><input class="form-control" type="text" id="story-title"
+                                        placeholder="Story title *" required=""><small
+                                        class="form-text text-danger flex-grow-1 lead"></small></div>
+                                <div class="mb-3 form-group">
+                                    <label class="form-label fw-semibold text-white">Select tags</label>
+                                    <div class="multi-select" id="multiSelect">
+                                        <div class="selected-tags form-control d-flex flex-wrap">
+                                            <input type="text" class="tag-input" placeholder="Choose anything..." />
+                                        </div>
+                                        <div class="dropdown-list"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-3 form-group"><input class="form-control" type="file" id="story-image"
+                                        placeholder="Image *" required=""><small
+                                        class="form-text text-danger lead"></small></div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3 form-group"><textarea class="form-control" id="content-story"
+                                        placeholder="Write your story *" required=""></textarea><small
+                                        class="form-text text-danger lead"></small></div>
+                            </div>
+                            <div class="w-100"></div>
+                            <div class="col-lg-12 text-center">
+                                <div id="success"></div><button class="btn btn-primary btn-xl text-uppercase"
+                                    id="sendMessageButton" type="submit">Send</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </section>
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4"><span class="copyright">Copyright&nbsp;© Brand 2025</span></div>
+                <div class="col-md-4">
+                    <ul class="list-inline quicklinks">
+                        <li class="list-inline-item"><a href="#">Privacy Policy</a></li>
+                        <li class="list-inline-item"><a href="#">Terms of Use</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="../assets/bootstrap/js/bootstrap.min.js"></script>
+    <script src="../assets/js/agency.js"></script>
+    <script src="../assets/js/multipleSelect.js"></script>
+</body>
+
+</html>
